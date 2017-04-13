@@ -26,8 +26,6 @@ const RTCBrowserType = {
 
     RTC_BROWSER_REACT_NATIVE: 'rtc_browser.react-native',
 
-    RTC_BROWSER_IOSRTC: "rtc_browser.iosrtc",
-
     /**
      * Tells whether or not the <tt>MediaStream/tt> is removed from
      * the <tt>PeerConnection</tt> and disposed on video mute (in order to turn
@@ -115,10 +113,6 @@ const RTCBrowserType = {
      */
     isNWJS() {
         return currentBrowser === RTCBrowserType.RTC_BROWSER_NWJS;
-    },
-
-    isiOSRTC: function () {
-        return currentBrowser === RTCBrowserType.RTC_BROWSER_IOSRTC;
     },
 
     /**
@@ -390,15 +384,6 @@ function detectNWJS() {
     return null;
 }
 
-function detectiOSRTC() {
-    const userAgent = navigator.userAgent;
-    if (userAgent.match(/iPhone/)) {
-        currentBrowser = RTCBrowserType.RTC_BROWSER_IOSRTC;
-        return 99;
-    }
-    return null;
-}
-
 /**
  *
  */
@@ -439,7 +424,6 @@ function detectBrowser() {
         detectReactNative,
         detectElectron,
         detectNWJS,
-        detectiOSRTC,
         detectOpera,
         detectChrome,
         detectFirefox,

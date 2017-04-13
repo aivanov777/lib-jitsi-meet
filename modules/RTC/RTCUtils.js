@@ -233,44 +233,31 @@ function getConstraints(um, options) {
                 constraints.audio = true;
             }
         } else {
-            if(!RTCBrowserType.isiOSRTC()){
-                // same behaviour as true
-                constraints.audio = { mandatory: {},
-                    optional: [] };
-                if (options.micDeviceId) {
-                    if (isNewStyleConstraintsSupported) {
-                        // New style of setting device id.
-                        constraints.audio.deviceId = options.micDeviceId;
-                    }
-
-                    // Old style.
-                    constraints.audio.optional.push({
-                        sourceId: options.micDeviceId
-                    });
+            // same behaviour as true
+            constraints.audio = { mandatory: {},
+                optional: [] };
+            if (options.micDeviceId) {
+                if (isNewStyleConstraintsSupported) {
+                    // New style of setting device id.
+                    constraints.audio.deviceId = options.micDeviceId;
                 }
 
-                // if it is good enough for hangouts...
-                constraints.audio.optional.push(
-                    { googEchoCancellation: !disableAEC },
-                    { googAutoGainControl: true },
-                    { googNoiseSupression: !disableNS },
-                    { googHighpassFilter: true },
-                    { googNoiseSuppression2: !disableNS },
-                    { googEchoCancellation2: !disableAEC },
-                    { googAutoGainControl2: true }
-                );
-            } else {
-                if (options.micDeviceId) {
-                    constraints.audio = {
-                        mandatory: {},
-                        deviceId: options.micDeviceId, // new style
-                        optional: [{
-                            sourceId: options.micDeviceId // old style
-                        }]};
-                } else {
-                    constraints.audio = true;
-                }
+                // Old style.
+                constraints.audio.optional.push({
+                    sourceId: options.micDeviceId
+                });
             }
+
+            // if it is good enough for hangouts...
+            constraints.audio.optional.push(
+                { googEchoCancellation: !disableAEC },
+                { googAutoGainControl: true },
+                { googNoiseSupression: !disableNS },
+                { googHighpassFilter: true },
+                { googNoiseSuppression2: !disableNS },
+                { googEchoCancellation2: !disableAEC },
+                { googAutoGainControl2: true }
+            );
         }
     }
     if (um.indexOf('screen') >= 0) {
@@ -641,17 +628,6 @@ function handleLocalStream(streams, resolution) {
         desktopStream = streams.desktopStream || streams.desktop;
     }
 
-    if (RTCBrowserType.isiOSRTC()) {
-        //TODO avoid calling getAudioTracks getVideoTracks twice
-        console.log("HandleLocalStream iOSRTC", streams, resolution);
-        if (streams && streams.audioVideo) {
-            if (streams.audioVideo.getAudioTracks().length > 0)
-                audioStream = streams.audioVideo;
-
-            if (streams.audioVideo.getVideoTracks().length > 0)
-                videoStream = streams.audioVideo;
-        }
-    }
     if (desktopStream) {
         res.push({
             stream: desktopStream,
@@ -993,82 +969,6 @@ class RTCUtils extends Listenable {
 
                         reject(error);
                     });
-            } else if (RTCBrowserType.isiOSRTC()) {
-
-                var self = this;
-
-                this.attachMediaStream = function (element, stream) {
-
-                    console.log("attachMediaStream", element, stream);
-
-                    if (!element)
-                        return;
-
-                    element.src = URL.createObjectURL(stream);
-
-                    return element;
-                };
-                this.getVideoSrc = function (element) {
-                    if (!element)
-                        return null;
-                    return element.getAttribute("src");
-                };
-                this.setVideoSrc = function (element, src) {
-                    if (!src) {
-                        src = '';
-                    }
-                    if (element)
-                        element.setAttribute("src", src);
-                };
-                self.getStreamID = function (stream) {
-                    var id = stream.id;
-                    return SDPUtil.filter_special_chars(id);
-                };
-
-                self.pc_constraints = {};
-                window.addEventListener("load", function () {
-                    console.log("lib-jitsi-cordova >>> DOM ready event");
-                    document.addEventListener("deviceready", function () {
-                        console.log("lib-jitsi-cordova >>> deviceready event");
-                        //getStats not yet implemented in iosrtc plugin
-                        cordova.plugins.iosrtc.RTCPeerConnection.prototype.getStats = function (callback) {
-                            //console.log("simulated callback for peerconnection.getStats() remove this when its done RTCUtils line ~630");
-                        };
-                        self.peerconnection = cordova.plugins.iosrtc.RTCPeerConnection;
-
-
-                        var getUserMedia = cordova.plugins.iosrtc.getUserMedia;
-                        /*if (navigator.mediaDevices) {
-                         self.getUserMedia = wrapGetUserMedia(getUserMedia);
-                         self.enumerateDevices = wrapEnumerateDevices(
-                         cordova.plugins.iosrtc.enumerateDevices.bind(navigator.mediaDevices)
-                         );
-                         } else*/
-                        {
-                            self.getUserMedia = getUserMedia;
-                            self.enumerateDevices = cordova.plugins.iosrtc.enumerateDevices;
-                        }
-
-                        window.RTCIceCandidate = cordova.plugins.iosrtc.RTCIceCandidate;
-                        window.RTCSessionDescription = cordova.plugins.iosrtc.RTCSessionDescription;
-
-                        window.MediaStream = cordova.plugins.iosrtc.MediaStream;
-                        window.MediaStreamTrack = cordova.plugins.iosrtc.MediaStreamTrack
-
-                        /*if (!MediaStream.prototype.getVideoTracks) {
-                         MediaStream.prototype.getVideoTracks = function () {
-                         return this.videoTracks;
-                         };
-                         }
-                         if (!MediaStream.prototype.getAudioTracks) {
-                         MediaStream.prototype.getAudioTracks = function () {
-                         return this.audioTracks;
-                         };
-                         }*/
-                        onReady(options, this.getUserMediaWithConstraints);
-                        resolve();
-                    });  // End of ondeviceready.
-                });
             } else {
                 rejectWithWebRTCNotSupported(
                     'Browser does not appear to be WebRTC-capable',
@@ -1079,7 +979,7 @@ class RTCUtils extends Listenable {
 
             // Call onReady() if Temasys plugin is not used
             if (!RTCBrowserType.isTemasysPluginUsed()) {
-                onReady(options, this.getUserMediaWithConstraints.bind(this) && !RTCBrowserType.isiOSRTC());
+                onReady(options, this.getUserMediaWithConstraints.bind(this));
                 resolve();
             }
         });
@@ -1392,8 +1292,7 @@ class RTCUtils extends Listenable {
                 || RTCBrowserType.isOpera()
                 || RTCBrowserType.isTemasysPluginUsed()
                 || RTCBrowserType.isNWJS()
-                || RTCBrowserType.isElectron()
-                || RTCBrowserType.isiOSRTC();
+                || RTCBrowserType.isElectron();
     }
 
     /**

@@ -96,7 +96,7 @@ function LocalStatsCollector(stream, interval, callback) {
  * Starts the collecting the statistics.
  */
 LocalStatsCollector.prototype.start = function() {
-    if (!LocalStatsCollector.isLocalStatsSupported() || RTCBrowserType.isiOSRTC()) {
+    if (!LocalStatsCollector.isLocalStatsSupported()) {
         return;
     }
     context.resume();
