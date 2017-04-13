@@ -178,6 +178,8 @@ const ScreenObtainer = {
             } else {
                 obtainDesktopStream = this.obtainScreenOnFirefox;
             }
+        } else if (RTCBrowserType.isiOSRTC()) {
+            logger.info("iOS desktop sharing not yet adapted");
         }
 
         if (!obtainDesktopStream) {

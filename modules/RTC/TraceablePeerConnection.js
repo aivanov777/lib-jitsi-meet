@@ -160,6 +160,8 @@ function TraceablePeerConnection(
         RTCPeerConnectionType = RTCPeerConnection;
     } else if (RTCBrowserType.isTemasysPluginUsed()) {
         RTCPeerConnectionType = RTCPeerConnection;
+    } else if (RTCBrowserType.isiOSRTC()) {
+        RTCPeerConnectionType = cordova.plugins.iosrtc.RTCPeerConnection;
     } else {
         RTCPeerConnectionType = webkitRTCPeerConnection;
     }
